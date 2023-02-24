@@ -290,21 +290,28 @@ export function prodRemotePlugin(
                   ) {
                     // import a, {b} from 'c' -> const a = await importShared('c'); const {b} = a;
                     const imports = namedImportDeclaration.join(',')
-                    const line = `const ${defaultImportDeclaration} = await importShared('${moduleName}');\nconst {${imports}} = ${defaultImportDeclaration};\n`
+                    const moduleBlockName = `${defaultImportDeclaration}__import_module`;
+                    
+                    const line = `const ${moduleBlockName} = await importShared('${moduleName}');\n const ${defaultImportDeclaration} = ${moduleBlockName}.default;\n const {${imports}} = ${moduleBlockName};\n`;
+                    // const line = `const ${defaultImportDeclaration} = await importShared('${moduleName}');\nconst {${imports}} = ${defaultImportDeclaration};\n`
                     magicString.overwrite(node.start, node.end, line)
                   } else if (defaultImportDeclaration) {
                     magicString.overwrite(
                       node.start,
                       node.end,
-                      `const ${defaultImportDeclaration} = await importShared('${moduleName}');\n`
+                      `const ${defaultImportDeclaration} = (await importShared('${moduleName}'))?.default;\n`
                     )
                   } else if (namedImportDeclaration.length) {
+                    const [prodSharedInfo = []] = parsedOptions.prodShared.filter((shareInfo) => shareInfo[0] === moduleName) ?? [];
+                    const moduleConfig = prodSharedInfo[1] ?? {};
+                    const namedImportDefault = moduleConfig.namedImportDefault;
+
                     magicString.overwrite(
                       node.start,
                       node.end,
                       `const {${namedImportDeclaration.join(
                         ','
-                      )}} = await importShared('${moduleName}');\n`
+                      )}} = (await importShared('${moduleName}'))${namedImportDefault ? '?.default' : ''};\n`
                     )
                   }
                 }

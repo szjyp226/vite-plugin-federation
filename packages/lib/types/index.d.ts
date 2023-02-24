@@ -299,4 +299,12 @@ declare interface SharedConfig {
    * determine whether to include the shared in the chunk, true is included, false will not generate a shared chunk, only the remote side of the parameter is valid, the host side will definitely generate a shared chunk
    */
   generate?: boolean
+  /**
+   * 提供具名导出时是否默认使用default关键字，如 
+   * true:
+   *  const {ElDialog} = (await importShared('element-ui')).default;
+   * false:
+   *  const {h} = await importShared('vue');
+   */
+  namedImportDefault:Boolean,
 }
